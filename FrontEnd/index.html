@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Smart Study Routine Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<!-- ===== MODERN GLASS UI ===== -->
+  <style>
+    * { box-sizing: border-box; font-family: 'Poppins', 'Segoe UI', sans-serif; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #1b1f3b, #0b0f1a);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+    }
+
+    .container { width: 95%; max-width: 1000px; }
+
+    .card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(14px);
+      border-radius: 18px;
+      padding: 28px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255,255,255,0.15);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+      animation: fadeUp 0.6s ease;
+    }
+
+    .card.hidden { display: none; }
+
+    h2 {
+      margin-top: 0;
+      font-size: 26px;
+      background: linear-gradient(90deg, #6dd5fa, #c77dff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 14px;
+      margin: 10px 0;
+      border-radius: 10px;
+      border: none;
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      font-size: 14px;
+    }
+
+    input::placeholder { color: #cfd3ff; }
+
+    /* ===== MODERN SELECT FIX ===== */
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      cursor: pointer;
+    }
+
+    select option {
+      background: #ffffff;
+      color: #111;
+      font-weight: 500;
+    }
+
+    select:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(109, 213, 250, 0.7);
+    }
+
+    select:hover {
+      background: rgba(255,255,255,0.18);
+    }
+
+    button {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #6dd5fa, #7f53ff);
+      color: #fff;
+      cursor: pointer;
+      margin: 6px 8px 0 0;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.25s ease;
+      box-shadow: 0 8px 25px rgba(127,83,255,0.45);
+    }
+
+    button:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 14px 40px rgba(127,83,255,0.65);
+    }
+
+    button.secondary {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+    }
+
+    button.danger {
+      background: linear-gradient(135deg, #ff416c, #ff4b2b);
+    }
+
+    .nav { display: flex; flex-wrap: wrap; gap: 10px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+    }
+
+    th, td {
+      padding: 14px;
+      text-align: left;
+    }
+
+    th {
+      background: linear-gradient(90deg, #6dd5fa, #7f53ff);
+    }
+
+    tr { background: rgba(255,255,255,0.08); }
+    tr:nth-child(even) { background: rgba(255,255,255,0.12); }
+
+    .break-row {
+      background: rgba(255, 214, 165, 0.25) !important;
+      font-style: italic;
+    }
+
+    .routine-card {
+      background: rgba(255,255,255,0.10);
+      border-radius: 14px;
+      padding: 14px;
+      margin: 10px 0;
+      border: 1px solid rgba(255,255,255,0.15);
+      transition: all 0.3s ease;
+    }
+
+    .routine-card:hover {
+      transform: scale(1.03);
+      background: rgba(255,255,255,0.18);
+    }
+
+    .message { margin-top: 10px; font-size: 14px; }
+    .error { color: #ff7675; }
+    .success { color: #2ecc71; }
+
+    a { color: #6dd5fa; text-decoration: none; font-weight: 600; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- LOGIN -->
+    <div class="card" id="loginSection">
+      <h2>Welcome Back</h2>
+      <input type="email" id="loginEmail" placeholder="Email" />
+      <input type="password" id="loginPassword" placeholder="Password" />
+      <button onclick="login()">Login</button>
+      <div class="message" id="loginMsg"></div>
+      <p style="margin-top:12px">New here? <a href="register.html">Create account</a></p>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="card hidden" id="dashboard">
+      <h2 id="welcome">Dashboard</h2>
+      <div class="nav">
+        <button onclick="showSection('subjectList')">📚 Subjects</button>
+        <button onclick="showSection('addSubject')">➕ Add</button>
+        <button onclick="showSection('generateRoutine')">🧠 Routine</button>
+        <button onclick="showSection('history'); loadHistory();">📜 History</button>
+        <button class="danger" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <!-- SUBJECT LIST -->
+    <div class="card hidden" id="subjectList">
+      <h2>My Subjects</h2>
+      <button onclick="loadSubjects()">Load</button>
+      <button class="secondary" onclick="hideAllSections()">Back</button>
+      <div id="subjectResult"></div>
+    </div>
+
+    <!-- ADD SUBJECT -->
+    <div class="card hidden" id="addSubject">
+      <h2>Add Subject</h2>
+      <input id="subName" placeholder="Subject name" />
+      <input id="credit" type="number" placeholder="Credit" />
+      <select id="difficulty">
+        <option value="">Difficulty</option>
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+      </select>
+      <select id="weakness">
+        <option value="">Weakness</option>
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+      </select>
+      <button onclick="addSubject()">Save</button>
+      <button class="secondary" onclick="hideAllSections()">Back</button>
+      <div class="message" id="addSubMsg"></div>
+    </div>
+
+    <!-- GENERATE ROUTINE -->
+    <div class="card hidden" id="generateRoutine">
+      <h2>Smart Routine</h2>
+      <input id="totalHours" type="number" placeholder="Total study hours" />
+      <button onclick="generateRoutine()">Generate</button>
+      <button class="secondary" onclick="hideAllSections()">Back</button>
+      <div id="routineResult"></div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="card hidden" id="history">
+  <h2>History</h2>
+  <button class="danger" onclick="deleteAllHistory()">🗑️ Delete All History</button>
+  <button class="secondary" onclick="hideAllSections()">Back</button>
+  <div id="historyResult"></div>
+</div>
+
+
+  </div>
+
+  <script>
+    const API = 'http://127.0.0.1:8000';
+
+      if (!userId) {
+    // login ছাড়া index.html open করলে
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("loginSection").classList.remove("hidden");
+      document.getElementById("dashboard").classList.add("hidden");
+      hideAllSections();
+    });
+  }
+
+    function hideAllSections(){
+      ['subjectList','addSubject','generateRoutine','history'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+    }
+    function showSection(id){ hideAllSections(); document.getElementById(id).classList.remove('hidden'); }
+
+    function login(){
+      loginMsg.textContent='Logging in...';
+      fetch(`${API}/login?email=${loginEmail.value}&password=${loginPassword.value}`,{method:'POST'})
+        .then(r=>r.json()).then(d=>{
+          if(d.error){ loginMsg.textContent=d.error; loginMsg.className='message error'; }
+          else{
+            localStorage.setItem('user_id', d.user_id);
+            loginSection.classList.add('hidden');
+            dashboard.classList.remove('hidden');
+            welcome.textContent=`Welcome, ${d.name}`;
+          }
+        });
+    }
+
+    function logout(){ localStorage.clear(); location.reload(); }
+
+    function addSubject(){
+      const uid=localStorage.getItem('user_id');
+      addSubMsg.textContent='Saving...';
+      fetch(`${API}/add-subject?user_id=${uid}&subject_name=${subName.value}&credit=${credit.value}&difficulty=${difficulty.value}&weakness=${weakness.value}`,{method:'POST'})
+        .then(r=>r.json()).then(d=>{
+          addSubMsg.textContent=d.error||'Subject added';
+          addSubMsg.className=d.error?'message error':'message success';
+        });
+    }
+
+    function loadSubjects(){
+      subjectResult.innerHTML='⏳ Loading...';
+      fetch(`${API}/subjects/${localStorage.getItem('user_id')}`)
+        .then(r=>r.json()).then(data=>{
+          subjectResult.innerHTML='';
+          if(!data.length){ subjectResult.textContent='No subjects found.'; return; }
+          data.forEach(s=>{
+            subjectResult.innerHTML+=`<div class='routine-card'><b>${s.subject_name}</b><br>Credit: ${s.credit}<br>Difficulty: ${s.difficulty}<br>Weakness: ${s.weakness}<br><br><button onclick='editSubject(${s.subject_id})'>Edit</button><button class='danger' onclick='deleteSubject(${s.subject_id})'>Delete</button></div>`;
+          });
+        });
+    }
+
+    function deleteSubject(id){ if(confirm('Delete subject?')) fetch(`${API}/delete-subject/${id}`,{method:'DELETE'}).then(loadSubjects); }
+
+    function editSubject(id){
+      const n=prompt('New subject name');
+      const c=prompt('New credit');
+      const d=prompt('Difficulty (easy/medium/hard)');
+      const w=prompt('Weakness (low/medium/high)');
+      if(!n||!c||!d||!w) return;
+      fetch(`${API}/update-subject/${id}?subject_name=${n}&credit=${c}&difficulty=${d}&weakness=${w}`,{method:'PUT'}).then(loadSubjects);
+    }
+
+    function generateRoutine(){
+      routineResult.innerHTML='⚙️ Generating smart routine...';
+      fetch(`${API}/generate-routine?user_id=${localStorage.getItem('user_id')}&total_hours=${totalHours.value}`,{method:'POST'})
+        .then(r=>r.json()).then(data=>{
+          if(data.error){ routineResult.innerHTML=`<div class='message error'>${data.error}</div>`; return; }
+          let html=`<table><tr><th>Activity</th><th>Duration</th></tr>`;
+          data.routine.forEach((item,idx)=>{
+            html+=`<tr><td>📘 ${item.subject}</td><td>${item.time}</td></tr>`;
+            if(idx!==data.routine.length-1){
+              html+=`<tr class='break-row'><td>☕ Break</td><td>10 min</td></tr>`;
+            }
+          });
+          html+='</table>';
+          routineResult.innerHTML=html;
+        });
+    }
+
+  function loadHistory(){
+  historyResult.innerHTML='Loading...';
+  fetch(`${API}/routines/${localStorage.getItem('user_id')}`)
+    .then(r=>r.json())
+    .then(d=>{
+      historyResult.innerHTML='';
+      if(!d.history.length){
+        historyResult.innerHTML='No history found.';
+        return;
+      }
+      d.history.forEach(h=>{
+        let box = `
+          <div class="routine-card">
+            <b>${h.date}</b> (${h.total_hours} hrs)
+            <button class="danger" onclick="deleteRoutine(${h.routine_id})">
+              Delete
+            </button>
+        `;
+        h.subjects.forEach(s=>{
+          box += `<div>${s.subject} → ${s.time}</div>`;
+        });
+        historyResult.innerHTML += box + `</div>`;
+      });
+    });
+}
+
+
+    if (userId) {
+  loginSection.classList.add("hidden");
+  dashboard.classList.remove("hidden");
+  welcome.textContent = "Welcome back";
+} else {
+  loginSection.classList.remove("hidden");
+  dashboard.classList.add("hidden");
+}
+
+
+function deleteRoutine(id){
+  if(confirm("Delete this routine?")){
+    fetch(`${API}/delete-routine/${id}`, { method:"DELETE" })
+      .then(()=>loadHistory());
+  }
+}
+
+function deleteAllHistory(){
+  if(confirm("Delete ALL history?")){
+    fetch(`${API}/delete-all-history/${localStorage.getItem("user_id")}`, {
+      method:"DELETE"
+    }).then(()=>loadHistory());
+  }
+}
+
+
+// if(localStorage.getItem("user_id")){
+//   loginSection.classList.add("hidden");
+//   dashboard.classList.remove("hidden");
+// }
+  </script>
+</body>
+</html>

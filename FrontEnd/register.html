@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Register – Smart Study Routine Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    * { box-sizing: border-box; font-family: Arial, sans-serif; }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      background: linear-gradient(135deg, #11998e, #38ef7d);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card {
+      width: 360px;
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      animation: fadeIn 0.6s ease;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #11998e;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      outline: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 15px;
+      border: none;
+      border-radius: 8px;
+      background: #11998e;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #0e7c72;
+    }
+
+    .message {
+      margin-top: 15px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .error { color: red; }
+    .success { color: green; }
+
+    .link {
+      margin-top: 15px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .link a {
+      color: #11998e;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    #otpSection {
+      display: none;
+      margin-top: 20px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>Register</h2>
+
+    <!-- REGISTER FORM -->
+    <input type="text" id="name" placeholder="Full Name" />
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+
+    <button onclick="register()">Create Account</button>
+
+    <div class="message" id="message"></div>
+
+    <!-- OTP SECTION -->
+    <div id="otpSection">
+      <h3 style="text-align:center;color:#11998e;">Verify OTP</h3>
+      <input type="text" id="otpInput" placeholder="Enter 6-digit OTP" />
+      <button onclick="verifyOtp()">Verify OTP</button>
+      <div class="message" id="otpMsg"></div>
+    </div>
+
+    <div class="link">
+      Already have an account? <a href="index.html">Login</a>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "http://127.0.0.1:8000";
+
+    function register() {
+      const name = document.getElementById("name").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const message = document.getElementById("message");
+
+      message.textContent = "Sending OTP to email...";
+      message.className = "message";
+
+      fetch(`${API_BASE}/register?name=${name}&email=${email}&password=${password}`, {
+        method: "POST"
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          message.textContent = data.error;
+          message.className = "message error";
+        } else {
+          message.textContent = data.message;
+          message.className = "message success";
+          document.getElementById("otpSection").style.display = "block";
+        }
+      })
+      .catch(() => {
+        message.textContent = "Server error";
+        message.className = "message error";
+      });
+    }
+
+    function verifyOtp() {
+      const email = document.getElementById("email").value;
+      const otp = document.getElementById("otpInput").value;
+      const otpMsg = document.getElementById("otpMsg");
+
+      otpMsg.textContent = "Verifying OTP...";
+      otpMsg.className = "message";
+
+      fetch(`${API_BASE}/verify-otp?email=${email}&otp=${otp}`, {
+        method: "POST"
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          otpMsg.textContent = data.error;
+          otpMsg.className = "message error";
+        } else {
+          otpMsg.textContent = data.message;
+          otpMsg.className = "message success";
+
+          setTimeout(() => {
+            window.location.href = "index.html";
+          }, 1500);
+        }
+      })
+      .catch(() => {
+        otpMsg.textContent = "Server error";
+        otpMsg.className = "message error";
+      });
+    }
+  </script>
+
+</body>
+</html>
